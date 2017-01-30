@@ -4,10 +4,10 @@
 redmolly.py by Temur Pallaev, 26.01.2017
 Simple bot for Telegram - says hello, returns random numbers (why?),
 currencies, news and vacancies.
-Add: links to the news, prettify vacancies output, weather function
+Add: links to the news, prettify vacancies output
 """
 
-# v. 1.3
+# v. 1.4
 
 import telepot
 import time
@@ -86,6 +86,19 @@ def handle(msg):
         for vacancy in vacancies[:5]:
             bot.sendMessage(chat_id, str(vacancy))
 
+    elif command == '/weather':
+            weather_api_key = secret.WEATHER_API_KEY
+            api_call = 'http://api.openweathermap.org/data/2.5/find?q=Dushanbe&units=metric&appid=' + weather_api_key
+            request_from_weather_api = requests.get(api_call)
+            data_from_api = request_from_weather_api.json()['list']
+            data = {}
+            weather = {}
+            for i in data_from_api:
+                data.update(i)
+            for y in data['weather']:
+                weather.update(y)
+            weather_output = '{} in {}. Temperature is {} C.'.format(weather['description'], data['name'], data['main']['temp'])
+            bot.sendMessage(chat_id, weather_output)
 
 bot = telepot.Bot(secret.KEY)
 bot.notifyOnMessage(handle)
