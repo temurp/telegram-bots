@@ -3,7 +3,7 @@
 """
 redmolly.py by Temur Pallaev, 26.01.2017
 Simple bot for Telegram - says hello, returns random numbers (why?),
-currencies, news and vacancies.
+currencies, news, vacancies and weather.
 Add: links to the news, prettify vacancies output
 """
 
