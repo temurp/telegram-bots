@@ -4,10 +4,10 @@
 redmolly.py by Temur Pallaev, 26.01.2017
 Simple bot for Telegram - says hello, returns random numbers (why?),
 currencies, news, vacancies and weather.
-Add: links to the news, prettify vacancies output
+Add: links to the news, prettify vacancies output, add undp.tj vacancies
 """
 
-# v. 1.4
+# v. 1.5
 
 import telepot
 import time
@@ -26,10 +26,12 @@ def handle(msg):
                 headers = {}
                 headers[
                     'User-Agent'] = "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17"
-                req = urllib.request.Request(url, headers=headers)
-                resp = urllib.request.urlopen(req)
-                main_site = resp.read()
-                soup = BeautifulSoup(main_site, 'html.parser')
+                # req = urllib.request.Request(url, headers=headers)
+                # resp = urllib.request.urlopen(req)
+                # main_site = resp.read()
+                # soup = BeautifulSoup(main_site, 'html.parser')
+                r = requests.get(url)
+                soup = BeautifulSoup(r.text, "html.parser")
                 return soup
 
     chat_id = msg['from']['id']
@@ -73,18 +75,37 @@ def handle(msg):
             bot.sendMessage(chat_id, title.text)
 
     elif command == '/vacancies':
-        soup = parseme('http://somon.tj/vakansii/it--telekom--kompyuteryi')
-        containers = soup.find_all("div", class_="announcement-container")
-        vacancies = []
-        for container in containers:
-            vacancies.append({
-                'title': container.find("a", class_="name").text.strip(),
-                'date': container.find("p", class_="float-left").text,
-                'price': container.find("p", class_="price").text.strip(),
-                'link': "http://somon.tj" + container.find(href=re.compile("adv"))['href']
-                })
-        for vacancy in vacancies[:5]:
-            bot.sendMessage(chat_id, str(vacancy))
+        # soup = parseme('http://somon.tj/vakansii/it--telekom--kompyuteryi')
+        # containers = soup.find_all("div", class_="announcement-container")
+        # vacancies = []
+        # for container in containers:
+        #     vacancies.append({
+        #         'title': container.find("a", class_="announcement-block__title").text.strip(),
+        #         'date': container.find("p", class_="time-like"),
+        #         'price': container.find("p", class_="list-announcement-block__price"),
+        #         #'link': "http://somon.tj" + container.find(href=re.compile("adv"))['href']
+        #         })
+        #         for vacancy in vacancies[:5]:
+        #             bot.sendMessage(chat_id, str(vacancy))
+
+        url = 'http://www.untj.org/index.php?option=com_flexicontent&view=category&cid=89:local-vacancies&Itemid=514'
+        soup = parseme(url)
+        titles_list = []
+        table = soup.find('table', class_="flexitable")
+        table_body = table.find('tbody')
+
+        rows = table_body.find_all('tr')
+        for row in rows:
+            cols = row.find_all('td')
+            cols = [ele.text.strip() for ele in cols]
+            titles_list.append([ele for ele in cols if ele])
+
+        #titles_list.insert(0, 'Detailed information on positions ' + url)
+        bot.sendMessage(chat_id, 'Vacancies from untj.org \n'
+                                 'Visit ' + url + ' for details')
+
+        for item in titles_list[:8]:
+            bot.sendMessage(chat_id, str(item))
 
     elif command == '/weather':
             weather_api_key = secret.WEATHER_API_KEY
